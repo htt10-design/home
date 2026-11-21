@@ -1,0 +1,246 @@
+/* Zuhause – Gestaltung „Hausschnitt“
+   Aufbau: Himmel + Haus oben, darunter Listen mit kräftigen Linien; Monospace für Messwerte.
+   Tablet (≥ 840 px): Navigation links, Übersicht zweispaltig. */
+
+@font-face { font-family: "Archivo"; font-style: normal; font-weight: 400 800; font-stretch: 62% 125%; font-display: swap; src: url(../fonts/archivo-latin.woff2) format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-style: normal; font-weight: 400; font-display: swap; src: url(../fonts/plexmono-400-latin.woff2) format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-style: normal; font-weight: 500; font-display: swap; src: url(../fonts/plexmono-500-latin.woff2) format("woff2"); }
+
+:root {
+  --bg: #f1f1ee; --surface: #fbfbf9; --ink: #1b1d1f; --muted: #61666b; --line: #2b2f33;
+  --sky1: #c9dbe6; --sky2: #f1f1ee; --ground: #8f8a7e; --accent: #2f5fa8; --warn: #c9520f; --crit: #c42b2b; --ok: #2f7d4f;
+  --leer: #d9d9d4; --mix: 62%;
+  --f-body: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --nav-h: 64px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #131517; --surface: #1b1e21; --ink: #e8e8e4; --muted: #9a9fa4; --line: #c9ccce;
+  --sky1: #16283a; --sky2: #131517; --ground: #4a463f; --accent: #7fa7e6; --warn: #f08a4b; --crit: #ff6b6b; --ok: #5cc28a;
+  --leer: #2a2e32; --mix: 52%; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #131517; --surface: #1b1e21; --ink: #e8e8e4; --muted: #9a9fa4; --line: #c9ccce;
+  --sky1: #16283a; --sky2: #131517; --ground: #4a463f; --accent: #7fa7e6; --warn: #f08a4b; --crit: #ff6b6b; --ok: #5cc28a;
+  --leer: #2a2e32; --mix: 52%; color-scheme: dark }
+
+* { box-sizing: border-box }
+html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 var(--f-body); min-height: 100dvh }
+a { color: inherit }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums }
+.dim { color: var(--muted) }
+[hidden] { display: none !important }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+
+.screen {
+  max-width: 560px; margin: 0 auto;
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) max(16px, env(safe-area-inset-right, 0px)) calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 28px) max(16px, env(safe-area-inset-left, 0px));
+}
+
+/* ---------- Himmel & Kopf ---------- */
+.sky {
+  margin: calc(-14px - env(safe-area-inset-top, 0px)) -16px 0; padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px 0;
+  background: linear-gradient(180deg, var(--sky1), var(--sky2));
+}
+.bar1 { display: flex; align-items: center; gap: 10px }
+.bar1 b { font-weight: 800; font-size: 22px; font-stretch: 80%; letter-spacing: .01em; text-transform: uppercase }
+.bar1 .mono { font-size: 11px; color: var(--muted); margin-left: auto }
+.conn.live { color: var(--ok) } .conn.verbinde { color: var(--warn) } .conn.fehler, .conn.getrennt { color: var(--crit) }
+.iconbtn { display: grid; place-items: center; width: 40px; height: 40px; margin-right: -8px; color: var(--ink) }
+.iconbtn svg { width: 22px; height: 22px }
+.out { display: flex; justify-content: space-between; align-items: end; gap: 12px; margin: 10px 0 6px }
+.out .lbl { font: 500 11px var(--f-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted) }
+.out .t { font-weight: 700; font-size: 64px; line-height: .9; font-stretch: 75%; letter-spacing: -.01em; font-variant-numeric: tabular-nums }
+.out .t sup { font-size: 22px; vertical-align: 32px; font-weight: 500 }
+.out .meta { text-align: right; font: 12px/1.6 var(--f-mono); color: var(--muted) }
+.out .meta b { color: var(--ink); font-weight: 500 }
+.out .meta .wx { display: block; width: 34px; height: 34px; margin: 0 0 4px auto; color: var(--ink) }
+.hours { display: grid; grid-template-columns: repeat(6, 1fr); text-align: center; font: 11px var(--f-mono); color: var(--muted); margin: 6px 0 4px }
+.hours .wx { display: block; width: 18px; height: 18px; margin: 2px auto; color: var(--ink) }
+.hours b { color: var(--ink); font-weight: 500; font-size: 13px }
+
+/* ---------- Haus ---------- */
+.house { position: relative; padding: 10px 6px 0 26px; margin-top: 4px }
+.roof { position: relative; height: 104px; margin: 0 -2px; clip-path: polygon(50% 0, 100% 100%, 0 100%); background: var(--line) }
+.roof:empty::after { content: ""; position: absolute; inset: 3px 4px 0; clip-path: polygon(50% 0, 100% 100%, 0 100%); background: color-mix(in oklab, var(--surface) 70%, var(--sky1)) }
+.roof .room { position: absolute; inset: 3px 4px 0; clip-path: polygon(50% 0, 100% 100%, 0 100%); min-height: 0; place-content: end center; padding-bottom: 8px; text-align: center; justify-items: center }
+.roof .lvl { left: -26px; top: auto; bottom: 18px; transform: none }
+.floor { position: relative; display: grid; gap: 2px; background: var(--line); padding: 2px 2px 0 }
+.floor:last-of-type { padding-bottom: 2px }
+.lvl { position: absolute; left: -24px; top: 50%; transform: translateY(-50%); font: 500 10px var(--f-mono); color: var(--muted); writing-mode: vertical-rl; rotate: 180deg; letter-spacing: .1em; white-space: nowrap; max-height: 100%; overflow: hidden }
+.room { text-decoration: none; color: var(--ink); background: color-mix(in oklab, var(--tc) var(--mix), var(--surface)); padding: 8px 8px 9px; min-height: 80px; display: grid; align-content: space-between; gap: 4px; position: relative; min-width: 0 }
+.room:active { filter: brightness(.95) }
+.room .n { font-weight: 600; font-size: 12.5px; font-stretch: 85%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.room .v { font: 500 20px var(--f-mono); letter-spacing: -.03em }
+.room .v.kein { font-size: 11px; letter-spacing: 0; color: var(--muted) }
+.room .h { font: 12px var(--f-mono); display: flex; align-items: center; gap: 4px }
+.room .h svg { width: 11px; height: 11px }
+.room.leer { background: repeating-linear-gradient(-45deg, var(--leer) 0 1px, var(--surface) 1px 7px) }
+.room.offline { background: var(--leer) }
+.room.offline .v { font-size: 13px; color: var(--muted) }
+.room.flag::after { content: "LÜFTEN"; position: absolute; bottom: 9px; right: 7px; font: 600 9px var(--f-mono); letter-spacing: .08em; padding: 2px 4px; background: var(--ink); color: var(--surface) }
+.ground { height: 9px; margin: 0 -6px 0 -26px; background: repeating-linear-gradient(-45deg, var(--ground) 0 2px, transparent 2px 6px); border-top: 2px solid var(--line) }
+.scale { display: flex; align-items: center; gap: 6px; margin: 12px 0 2px; font: 10px var(--f-mono); color: var(--muted) }
+.scale div { flex: 1; height: 6px; background: linear-gradient(90deg, #4f7fd1, #9cc3e0, #f3e3a8, #f3a35b, #e2553f) }
+.tip { font-size: 13px; color: var(--muted); border-left: 3px solid var(--accent); padding: 4px 0 4px 10px; margin: 12px 0 0 }
+
+/* ---------- Abschnitte ---------- */
+h3 { font-weight: 700; font-size: 13px; font-stretch: 80%; text-transform: uppercase; letter-spacing: .08em; margin: 24px 0 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px; border-bottom: 2px solid var(--line); padding-bottom: 4px }
+h3 > span { font: 400 11px var(--f-mono); text-transform: none; letter-spacing: 0; color: var(--muted) }
+.pagehead { display: grid; gap: 4px; margin-bottom: 8px }
+.pagehead h1, .rtop h1 { font-weight: 800; font-size: 32px; line-height: 1; font-stretch: 78%; text-transform: uppercase; margin: 0; text-wrap: balance }
+.pagehead p { margin: 0; font-size: 11px }
+.back { font: 12px var(--f-mono); text-decoration: none; display: inline-flex; align-items: center; gap: 4px; padding: 6px 0 }
+.back svg { width: 14px; height: 14px }
+.prose { font-size: 14px; color: var(--muted); max-width: 62ch }
+.prose b { color: var(--ink) }
+.prose p { margin: 0 0 10px }
+.empty, .chart-empty { padding: 28px 12px; text-align: center; color: var(--muted); font: 12px var(--f-mono); border: 2px dashed color-mix(in oklab, var(--line) 40%, transparent) }
+.more { display: block; text-align: right; font: 12px var(--f-mono); padding: 8px 0 0 }
+
+/* Lüften-Balken */
+.ah { display: grid; gap: 4px }
+.ahrow { display: grid; grid-template-columns: minmax(84px, 30%) 1fr 104px; gap: 8px; align-items: center; font-size: 13px; text-decoration: none; padding: 4px 0 }
+.ahrow .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.ahrow .nm small { display: block; font: 10.5px var(--f-mono); color: var(--muted) }
+.ahrow .track { height: 14px; position: relative; background: color-mix(in oklab, var(--line) 10%, transparent) }
+.ahrow .track > span:first-child { position: absolute; inset: 0 auto 0 0; background: var(--ink) }
+.ahrow .track .ref { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--accent) }
+.ahrow .track .refbar { position: absolute; inset: 0 auto 0 0; background: var(--accent) !important }
+.ahrow.out { border-top: 1px dashed color-mix(in oklab, var(--line) 40%, transparent); margin-top: 4px; padding-top: 8px; color: var(--accent) }
+.ahrow .r { font: 11px var(--f-mono); text-align: right }
+.ahrow .r.go { color: var(--warn); font-weight: 500 }
+
+/* Hinweise */
+.alerts { border: 2px solid var(--line) }
+.alert { display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: center; padding: 10px; font-size: 13.5px; text-decoration: none }
+.alert + .alert { border-top: 1px solid color-mix(in oklab, var(--line) 30%, transparent) }
+.alert .k { font: 600 10px var(--f-mono); text-align: center; padding: 3px 0; background: var(--muted); color: var(--surface) }
+.alert.warn .k { background: var(--warn) } .alert.crit .k { background: var(--crit) } .alert.info .k { background: var(--accent) }
+.alert .s { font: 11px var(--f-mono); color: var(--muted) }
+
+/* Steckdosen */
+.plug { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; border: 2px solid var(--line); padding: 12px; margin-bottom: 10px }
+.plug .pn { font-weight: 600; font-stretch: 85% }
+.plug .pn small { font: 11px var(--f-mono); color: var(--muted); margin-left: 8px; font-weight: 400 }
+.plug .w { font: 500 28px var(--f-mono); letter-spacing: -.03em }
+.plug.offline .w { font-size: 16px; color: var(--muted) }
+.plug .meta { font: 11px/1.6 var(--f-mono); color: var(--muted); grid-column: 1 / -1; display: flex; gap: 18px }
+.plug .meta b { color: var(--ink); font-weight: 500 }
+.tog { border: 2px solid var(--line); background: none; font: 600 12px var(--f-mono); color: var(--ink); padding: 0; display: flex; cursor: pointer; min-height: 40px; align-items: stretch }
+.tog span { padding: 0 12px; display: grid; place-items: center }
+.tog[aria-checked="true"] .on, .tog[aria-checked="false"] .off { background: var(--ink); color: var(--surface) }
+.tog:disabled { opacity: .5; cursor: default }
+
+/* ---------- Raumdetail ---------- */
+.rtop { margin: calc(-14px - env(safe-area-inset-top, 0px)) -16px 0; padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 16px; background: color-mix(in oklab, var(--tc) var(--mix), var(--surface)); border-bottom: 2px solid var(--line); display: grid; gap: 10px }
+.rtop .sub { font-size: 11px; opacity: .8; margin-top: 4px }
+.rvals { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 2px solid var(--line) }
+.rvals div { padding: 8px 0 0; font: 10px var(--f-mono); text-transform: uppercase; letter-spacing: .05em; min-width: 0 }
+.rvals div + div { border-left: 1px solid var(--line); padding-left: 10px }
+.rvals b { display: block; font: 500 26px var(--f-mono); letter-spacing: -.03em; text-transform: none }
+.verdict { margin-top: 14px; padding: 10px 12px; border-left: 6px solid var(--muted); background: var(--surface); font-size: 13.5px }
+.verdict.warn { border-left-color: var(--warn) } .verdict.ok { border-left-color: var(--ok) }
+.verdict b { display: block; font-stretch: 85%; font-size: 15.5px; margin-bottom: 2px }
+.tabs { display: inline-flex; border: 2px solid var(--line) }
+.tabs button, .tabs label span { border: 0; background: none; font: 500 11px var(--f-mono); color: var(--ink); padding: 5px 12px; cursor: pointer; text-transform: uppercase; display: block }
+.tabs button[aria-pressed="true"], .tabs input:checked + span { background: var(--ink); color: var(--surface) }
+.tabs input { position: absolute; opacity: 0; pointer-events: none }
+.tabs input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: -4px }
+.tabs.big label span { padding: 9px 16px; font-size: 12px }
+.chart { width: 100%; height: auto; display: block; overflow: visible }
+.c-grid { stroke: color-mix(in oklab, var(--line) 18%, transparent); stroke-width: 1 }
+.c-lab { font: 10px var(--f-mono); fill: var(--muted) }
+.c-night { fill: color-mix(in oklab, var(--accent) 9%, transparent) }
+.c-area { fill: color-mix(in oklab, var(--warn) 18%, transparent) }
+.c-temp { fill: none; stroke: var(--warn); stroke-width: 2.2; stroke-linejoin: round }
+.c-hum { fill: none; stroke: var(--ink); stroke-width: 1.4; stroke-dasharray: 3 3 }
+.c-dot { fill: var(--warn); stroke: var(--bg); stroke-width: 2 }
+.legend { font-size: 10px; color: var(--muted); display: flex; gap: 14px; margin-top: 2px }
+.range { display: grid; gap: 2px }
+.range .row { display: grid; grid-template-columns: 52px 1fr; gap: 10px; align-items: center; font: 11px var(--f-mono) }
+.rail { position: relative; height: 22px; border-bottom: 1px solid var(--line); margin-bottom: 16px }
+.rail .seg2 { position: absolute; top: 6px; height: 10px; background: color-mix(in oklab, var(--ink) 75%, transparent) }
+.rail .now { position: absolute; top: 0; bottom: 0; width: 3px; background: var(--warn) }
+.rail .lo, .rail .hi { position: absolute; top: 24px; font-size: 10px; color: var(--muted); transform: translateX(-50%) }
+.when { font-size: 10.5px; color: var(--muted); margin: 0 0 10px 62px }
+table.ents { width: 100%; border-collapse: collapse; font: 12px var(--f-mono) }
+.ents td { padding: 8px 0; border-bottom: 1px solid color-mix(in oklab, var(--line) 25%, transparent); overflow-wrap: anywhere }
+.ents td:last-child { text-align: right; padding-left: 12px; white-space: nowrap; vertical-align: top }
+.ents td small { display: block; font-size: 10px; color: var(--muted); margin-top: 2px }
+.bad { color: var(--crit); font-weight: 500 }
+
+/* ---------- Formulare ---------- */
+.form { display: grid; gap: 8px }
+fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 12px }
+legend { width: 100%; font-weight: 700; font-size: 13px; font-stretch: 80%; text-transform: uppercase; letter-spacing: .08em; margin: 20px 0 10px; border-bottom: 2px solid var(--line); padding-bottom: 4px }
+.field { display: grid; gap: 5px; font-size: 13px; font-weight: 600 }
+.field small { font-weight: 400; color: var(--muted) }
+input[type="url"], input[type="number"], select, textarea {
+  font: 14px var(--f-mono); color: var(--ink); background: var(--surface); border: 2px solid var(--line); border-radius: 0; padding: 9px 10px; width: 100%; min-width: 0 }
+textarea { resize: vertical; word-break: break-all }
+.unit { display: flex; align-items: center; gap: 8px } .unit span { font: 12px var(--f-mono); color: var(--muted); min-width: 34px }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px }
+input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--ink); margin: 0 }
+.hint { font-size: 13px; color: var(--muted); margin: 0 }
+.hint b { color: var(--ink) }
+.err { color: var(--crit); font-size: 14px; margin: 0 }
+table.roomset { width: 100%; border-collapse: collapse; font-size: 14px }
+.roomset th { font: 500 10px var(--f-mono); text-transform: uppercase; color: var(--muted); text-align: left; padding: 4px 0 }
+.roomset th:not(:first-child), .roomset td:not(:first-child) { text-align: center; width: 90px }
+.roomset td { padding: 9px 0; border-bottom: 1px solid color-mix(in oklab, var(--line) 25%, transparent) }
+.btn { font: 600 14px var(--f-body); background: var(--ink); color: var(--surface); border: 2px solid var(--ink); padding: 11px 18px; cursor: pointer; justify-self: start }
+.btn.ghost { background: none; color: var(--ink) }
+.btn.small { padding: 6px 12px; font-size: 13px; background: var(--surface); color: var(--ink) }
+.btn:disabled { opacity: .6 }
+
+/* ---------- Anmeldung / Laden ---------- */
+.login { display: grid; gap: 14px; padding-top: 24px }
+.login h1 { font-weight: 800; font-size: 40px; font-stretch: 75%; text-transform: uppercase; margin: 0; line-height: 1 }
+.login p, .login ol { margin: 0; font-size: 14.5px }
+.login ol { padding-left: 20px; display: grid; gap: 6px; color: var(--muted) }
+.login ol b { color: var(--ink) }
+.login form { display: grid; gap: 12px; margin-top: 6px }
+.loginhouse { width: 120px; display: grid; gap: 2px; background: var(--line); padding: 0 2px 2px; clip-path: polygon(50% 0, 100% 38%, 100% 100%, 0 100%, 0 38%) }
+.loginhouse .roof { height: 46px; background: #9cc3e0; clip-path: none; margin: 0 -2px }
+.loginhouse .floor { display: flex; gap: 2px; padding: 0; background: none }
+.loginhouse .floor span { flex: 1; height: 30px; background: #f3e3a8 }
+.loginhouse .floor span:nth-child(2) { background: #f3a35b }
+.loginhouse .floor:last-child span:first-child { flex: 2; background: #f3c98a }
+.splash { min-height: 70dvh; display: grid; place-content: center; justify-items: center; gap: 16px; font-size: 12px; color: var(--muted) }
+.pulse { animation: pulse 1.6s ease-in-out infinite }
+@keyframes pulse { 50% { opacity: .55 } }
+
+/* ---------- Navigation & Toast ---------- */
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: grid; grid-template-columns: repeat(4, 1fr);
+  background: var(--surface); border-top: 2px solid var(--line);
+  padding: 6px max(6px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(6px, env(safe-area-inset-left, 0px)) }
+.tabbar a { display: grid; justify-items: center; gap: 3px; text-decoration: none; color: var(--muted); font: 10px var(--f-mono); text-transform: uppercase; letter-spacing: .04em; padding: 4px 0 }
+.tabbar a > span { position: relative }
+.tabbar svg { width: 23px; height: 23px }
+.tabbar a.on { color: var(--ink); font-weight: 500 }
+.badge { position: absolute; top: -30px; right: -4px; font: 600 9px var(--f-mono); font-style: normal; background: var(--warn); color: var(--surface); min-width: 16px; height: 16px; border-radius: 8px; display: grid; place-items: center; padding: 0 4px }
+.toast { position: fixed; z-index: 30; left: 50%; transform: translateX(-50%); bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 16px); width: min(520px, calc(100% - 32px));
+  background: var(--ink); color: var(--surface); padding: 10px 12px 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px }
+
+/* ---------- Tablet ---------- */
+@media (min-width: 840px) {
+  :root { --nav-h: 0px }
+  body { padding-left: 92px }
+  .screen { max-width: 1080px; padding-left: 28px; padding-right: 28px; padding-bottom: 40px }
+  body { background: linear-gradient(180deg, var(--sky1), var(--sky2) 620px) no-repeat, var(--bg) }
+  .sky { background: none; margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0 }
+  .sky .house { max-width: 640px; margin-inline: auto }
+  .cols { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 36px }
+  .rtop { margin-left: -28px; margin-right: -28px; padding-left: 28px; padding-right: 28px }
+  .tabbar { top: 0; right: auto; width: 92px; grid-template-columns: 1fr; align-content: start; gap: 8px; border-top: 0; border-right: 2px solid var(--line);
+    padding: calc(env(safe-area-inset-top, 0px) + 20px) 0 0 max(0px, env(safe-area-inset-left, 0px)) }
+  .tabbar a { padding: 10px 0 }
+  .badge { top: -34px; right: 0 }
+  .toast { bottom: 20px }
+  .room { min-height: 100px } .room .v { font-size: 24px }
+  .roof { height: 130px }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important } }
