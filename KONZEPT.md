@@ -1,6 +1,6 @@
 # Konzept: eigene Smart-Home-App („Zuhause“, Arbeitstitel)
 
-Stand: 21.11.2026 · Status: Entwurf zur Abstimmung, noch kein Code
+Stand: 21.11.2026 · Status: Design B „Hausschnitt“ gewählt, Stufe 1–2 gebaut (v0.1.0)
 
 ## 1. Ziel in einem Satz
 
