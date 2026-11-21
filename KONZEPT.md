@@ -15,7 +15,7 @@ Hinweise so zeigt, dass man in zwei Sekunden weiß, ob etwas zu tun ist.
 | Sprache/Stack | Vanilla HTML/CSS/JS, native ES-Module (`<script type="module">`), kein Build, keine Frameworks |
 | Diagramme | eigene kleine SVG-Diagrammfunktion (≈150 Zeilen), keine Bibliothek |
 | UI | Deutsch, Hell/Dunkel/System, mobil zuerst, Tablet mit Zwei-Spalten-Layout |
-| Hosting | `~/server/homeassistant/config/www/<app>/` → `https://heimserver.tail8f2780.ts.net:8124/local/<app>/` |
+| Hosting | `~/server/homeassistant/config/www/<app>/` → `https://heimserver.tail8f2780.ts.net:8124/local/<app>/index.html` |
 | Verbindung | HA-WebSocket `wss://…:8124/api/websocket`, gleiche Origin, kein CORS |
 | Anmeldung | Long-Lived Access Token, beim ersten Start eingegeben, nur in `localStorage` des Geräts |
 | Updates | `git pull` im Ordner auf dem Server, Service Worker mit Versionsnummer |

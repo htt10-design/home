@@ -5,7 +5,7 @@ Lüftungsempfehlung über die absolute Feuchte, Verläufe, Steckdosen und Hinwei
 Vanilla HTML/CSS/JS ohne Build-Schritt, als PWA auf dem Home-Bildschirm.
 
 - Läuft direkt aus dem HA-Ordner `config/www/zuhause/`, Adresse:
-  **https://heimserver.tail8f2780.ts.net:8124/local/zuhause/**
+  **https://heimserver.tail8f2780.ts.net:8124/local/zuhause/index.html**
 - Daten kommen live über die HA-WebSocket-API. Der Zugangs-Token wird beim ersten Start
   eingegeben und bleibt nur auf dem jeweiligen Gerät.
 - Räume, Etagen und Geräte liest die App aus Home Assistant. Ein neues Gerät erscheint
@@ -36,6 +36,9 @@ git clone https://github.com/htt10-design/home.git zuhause
 ```
 
 Danach gibt es den Ordner `~/server/homeassistant/config/www/zuhause` mit allen Dateien.
+Falls „Permission denied“ kommt, gehört der Ordner `www` noch root. Einmal ausführen
+(fragt nach deinem Passwort): `sudo chown $USER:$USER ~/server/homeassistant/config/www`
+
 Falls `git` fehlt: `sudo apt install git` (fragt nach deinem Passwort).
 Falls das Repo privat ist, fragt git nach Benutzername und Passwort. Als Passwort
 brauchst du dann einen GitHub-Token. Einfacher ist es, das Repo öffentlich zu stellen:
@@ -58,7 +61,7 @@ docker restart homeassistant
 **4. Testen**
 
 Am Handy (Tailscale an) im Chrome öffnen:
-`https://heimserver.tail8f2780.ts.net:8124/local/zuhause/`
+`https://heimserver.tail8f2780.ts.net:8124/local/zuhause/index.html`
 
 ## Token erstellen
 
@@ -114,7 +117,7 @@ Liste `FILES` in `sw.js` eintragen.
 
 | Problem | Lösung |
 |---|---|
-| Seite zeigt „404“ | Ordner heißt nicht `zuhause` oder liegt nicht in `config/www/`, oder HA wurde nach dem Anlegen von `www` nicht neu gestartet (Schritt 3). |
+| Seite zeigt „404“ | Adresse muss auf `/index.html` enden (HA zeigt für Ordner keine Startseite). Sonst: Ordner heißt nicht `zuhause` oder liegt nicht in `config/www/`, oder HA wurde nach dem Anlegen von `www` nicht neu gestartet (Schritt 3). |
 | „Home Assistant ist nicht erreichbar“ | Tailscale am Handy an? Läuft HA? Die normale HA-Seite unter derselben Adresse testen. |
 | „Token wurde abgelehnt“ | Token in HA gelöscht oder falsch kopiert. Neuen Token erstellen. |
 | Raum zeigt „kein Sensor“ | Dem Gerät in HA einen Bereich zuweisen: Einstellungen → Geräte & Dienste → Gerät → Bereich. |

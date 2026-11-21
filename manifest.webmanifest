@@ -3,7 +3,7 @@
   "short_name": "Zuhause",
   "description": "Raumklima, Geräte und Hinweise aus Home Assistant",
   "lang": "de",
-  "start_url": "./",
+  "start_url": "index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",

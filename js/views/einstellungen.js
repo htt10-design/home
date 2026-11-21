@@ -98,7 +98,7 @@ export const einstellungenView = {
       for (const [k] of GRENZEN) f.elements[k].value = DEFAULTS[k];
       save(); ctx.toast("Standardwerte gesetzt.");
     });
-    el.querySelector("#logout").addEventListener("click", () => { setToken(""); ctx.conn.close(); location.hash = ""; location.reload(); });
+    el.querySelector("#logout").addEventListener("click", () => { setToken(""); ctx.conn.close(); location.href = "index.html"; });
     el.querySelector("#hardreload").addEventListener("click", async () => {
       try {
         for (const k of await caches.keys()) await caches.delete(k);
