@@ -149,7 +149,8 @@ Navigation Handy: untere Leiste mit 4 Punkten. Tablet (≥ 840 px): Seitenleiste
    Außentemperatur groß + Wetter (jetzt, nächste Stunden, heute min/max) ·
    Hinweisleiste · Lüftungs-Karte · Räume als Kacheln (Temperatur, Feuchte, Ampel) ·
    Schnellzugriff Steckdose(n).
-2. **Raum** (Tipp auf Kachel)
+2. **Blick** (Tipp auf Raumkachel oder Außentemperatur): Einblendung mit Verlauf 24 h / 7 Tage, Tiefst/Höchst, draußen mit Vorhersage für 12 h; „Alle Details“ führt zur Raumseite.
+   **Raum**
    Aktuelle Werte, Status in Worten, Diagramm 24 h / 7 Tage (Temperatur + Feuchte),
    Min/Max mit Uhrzeit, absolute Feuchte + Taupunkt, alle Geräte im Raum, Akku, „zuletzt gemeldet“.
 3. **Klima**

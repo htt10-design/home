@@ -10,10 +10,13 @@ import { klimaView } from "./views/klima.js";
 import { geraeteView } from "./views/geraete.js";
 import { hinweiseView } from "./views/hinweise.js";
 import { einstellungenView } from "./views/einstellungen.js";
+import { blickHtml, blickMount, blickZuruecksetzen } from "./views/blick.js";
 
 const $view = document.getElementById("view");
 const $nav = document.getElementById("nav");
 const $toast = document.getElementById("toast");
+const $sheet = document.getElementById("sheet");
+const $panel = $sheet.querySelector(".sheet-panel");
 
 const ROUTES = { haus: hausView, raum: raumView, klima: klimaView, geraete: geraeteView, hinweise: hinweiseView, einstellungen: einstellungenView };
 const NAV = [["haus", "home", "Übersicht"], ["klima", "climate", "Klima"], ["geraete", "plug", "Geräte"], ["hinweise", "bell", "Hinweise"]];
@@ -63,13 +66,15 @@ function scheduleRender() {
 function render(routeEvent) {
   if (!ctx.model) return;
   const r = route(), view = ROUTES[r.name];
-  const key = r.name + "/" + r.arg;
-  const routeChanged = routeEvent || key !== lastRoute;
-  if (!routeChanged && !view.live) return;
+  // Auf der Übersicht ist das Argument die geöffnete Einblendung, nicht eine eigene Seite
+  const key = r.name === "haus" ? "haus" : r.name + "/" + r.arg;
+  const pageChanged = key !== lastRoute;
+  syncSheet(r.name === "haus" ? r.arg : null);
+  if (!routeEvent && !pageChanged && !view.live) return;
   lastRoute = key;
-  $view.innerHTML = view.render(ctx, r.arg);
+  $view.innerHTML = view.render(ctx, r.name === "haus" ? null : r.arg);
   view.mount?.($view, ctx, r.arg);
-  if (routeChanged) window.scrollTo(0, 0);
+  if (pageChanged) window.scrollTo(0, 0);
   const navKey = r.name === "raum" ? "haus" : r.name;
   $nav.innerHTML = NAV.map(([k, icon, label]) => `<a href="#${k}" class="${k === navKey ? "on" : ""}" ${k === navKey ? 'aria-current="page"' : ""}>${I[icon]}<span>${label}${k === "hinweise" && ctx.model.alerts.length ? `<i class="badge">${ctx.model.alerts.length}</i>` : ""}</span></a>`).join("");
   document.title = r.name === "haus" ? "Zuhause" : `${$view.querySelector("h1")?.textContent || ""} · Zuhause`;
@@ -80,7 +85,69 @@ function rebuild() {
   if (ctx.model.weather?.id !== ctx.store.forecast.entity) ctx.store.watchForecast(ctx.model.weather?.id || null);
 }
 
-window.addEventListener("hashchange", () => render(true));
+let lastHash = location.hash, sheetFromApp = false;
+window.addEventListener("hashchange", () => {
+  const prev = lastHash; lastHash = location.hash;
+  // Einblendung aus der Übersicht heraus geöffnet → Schließen = Zurück (passt zur Android-Zurück-Taste)
+  if (/^#haus\/./.test(location.hash)) sheetFromApp = sheetFromApp || /^(#haus)?$/.test(prev) || /^#haus\/./.test(prev);
+  else sheetFromApp = false;
+  render(true);
+});
+
+// ---------- Einblendung („Blick“) ----------
+let sheetId = null, sheetTimer = null;
+function syncSheet(id) {
+  if (id) {
+    const body = $panel.querySelector(".sh-body");
+    const keep = sheetId === id ? body?.scrollTop || 0 : 0;
+    $panel.innerHTML = blickHtml(ctx, id);
+    blickMount($panel, ctx, id);
+    $panel.querySelector(".sh-body").scrollTop = keep;
+    if (sheetId !== id && !$sheet.classList.contains("open")) {
+      clearTimeout(sheetTimer);
+      $sheet.hidden = false;
+      document.body.classList.add("sheet-open");
+      requestAnimationFrame(() => requestAnimationFrame(() => $sheet.classList.add("open")));
+      $panel.querySelector("[data-close]")?.focus({ preventScroll: true });
+    }
+    sheetId = id;
+  } else if (sheetId) {
+    sheetId = null;
+    blickZuruecksetzen();
+    $sheet.classList.remove("open");
+    $panel.style.transform = "";
+    document.body.classList.remove("sheet-open");
+    clearTimeout(sheetTimer);
+    sheetTimer = setTimeout(() => { if (!sheetId) { $sheet.hidden = true; $panel.innerHTML = ""; } }, 320);
+  }
+}
+function closeSheet() {
+  if (sheetFromApp) history.back();
+  else location.replace("#haus");
+}
+$sheet.addEventListener("click", e => {
+  if (e.target.closest("[data-close]") || e.target.classList.contains("sheet-backdrop")) closeSheet();
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape" && sheetId) closeSheet(); });
+// Nach unten wischen schließt (nur Handy-Blatt)
+(() => {
+  let y0 = null, dy = 0;
+  const mobil = () => matchMedia("(max-width: 839px)").matches;
+  $panel.addEventListener("touchstart", e => {
+    if (!mobil() || !e.target.closest(".sh-band")) return;
+    y0 = e.touches[0].clientY; dy = 0; $panel.classList.add("dragging");
+  }, { passive: true });
+  $panel.addEventListener("touchmove", e => {
+    if (y0 == null) return;
+    dy = Math.max(0, e.touches[0].clientY - y0);
+    $panel.style.transform = `translateY(${dy}px)`;
+  }, { passive: true });
+  $panel.addEventListener("touchend", () => {
+    if (y0 == null) return;
+    y0 = null; $panel.classList.remove("dragging");
+    if (dy > 90) closeSheet(); else $panel.style.transform = "";
+  });
+})();
 
 // ---------- Anmeldung ----------
 function loginScreen(message = "") {

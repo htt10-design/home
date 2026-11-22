@@ -1,12 +1,16 @@
 // Kleines SVG-Liniendiagramm: Temperatur (linke Achse, Fläche) + Luftfeuchte (rechte Achse, gestrichelt).
 const WD = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 
-export function chart({ temp = [], hum = [], start, end, days }) {
+/**
+ * temp/hum: [{t, v}] gemessen · forecast: [{t, v}] Vorhersage (gestrichelt, nach „jetzt“)
+ * now: Zeitpunkt „jetzt“ (Standard: end) · marks: Tiefst-/Höchstwert im Diagramm beschriften
+ */
+export function chart({ temp = [], hum = [], forecast = [], start, end, now = end, days, marks = false }) {
   const W = 340, H = 180, L = 30, R = 32, T = 10, B = 22, iw = W - L - R, ih = H - T - B;
   if (!temp.length && !hum.length) return `<div class="chart-empty">Noch keine Verlaufsdaten.</div>`;
   const x = t => L + (t - start) / (end - start) * iw;
 
-  const tv = temp.map(p => p.v), hv = hum.map(p => p.v);
+  const tv = [...temp, ...forecast].map(p => p.v), hv = hum.map(p => p.v);
   let tlo = Math.floor(Math.min(...tv)) - 1, thi = Math.ceil(Math.max(...tv)) + 1;
   if (!tv.length) { tlo = 0; thi = 1; }
   let hlo = Math.floor(Math.min(...hv) / 10) * 10, hhi = Math.ceil(Math.max(...hv) / 10) * 10;
@@ -34,6 +38,7 @@ export function chart({ temp = [], hum = [], start, end, days }) {
   if (days === 1) {
     const d = new Date(start); d.setMinutes(0, 0, 0); d.setHours(Math.ceil((d.getHours() + 1) / 6) * 6);
     for (let t = d.getTime(); t < end - 2 * 3600e3; t += 6 * 3600e3) {
+      if (Math.abs(x(t) - x(now)) < 36 || (now >= end && x(t) > W - R - 44)) continue; // Platz für „jetzt“
       g += `<text class="c-lab" x="${x(t).toFixed(1)}" y="${H - 6}" text-anchor="middle">${String(new Date(t).getHours()).padStart(2, "0")}:00</text>`;
     }
   } else {
@@ -44,7 +49,9 @@ export function chart({ temp = [], hum = [], start, end, days }) {
       if (mid < W - R - 34 && t + 86400e3 - end < 12 * 3600e3) g += `<text class="c-lab" x="${mid.toFixed(1)}" y="${H - 6}" text-anchor="middle">${WD[new Date(t).getDay()]}</text>`;
     }
   }
-  g += `<text class="c-lab" x="${W - R}" y="${H - 6}" text-anchor="end">jetzt</text>`;
+  if (now < end) {
+    g += `<line class="c-now" x1="${x(now).toFixed(1)}" x2="${x(now).toFixed(1)}" y1="${T}" y2="${T + ih}"/><text class="c-lab c-nowlab" x="${x(now).toFixed(1)}" y="${H - 6}" text-anchor="middle">jetzt</text>`;
+  } else g += `<text class="c-lab" x="${W - R}" y="${H - 6}" text-anchor="end">jetzt</text>`;
 
   let body = "";
   if (temp.length) {
@@ -54,7 +61,17 @@ export function chart({ temp = [], hum = [], start, end, days }) {
   if (hum.length) body += `<path class="c-hum" d="${path(hum, yh)}"/>`;
   if (temp.length) {
     const l = temp.at(-1);
+    if (forecast.length) body += `<path class="c-fc" d="${path([l, ...forecast.filter(p => p.t > l.t)], yt)}"/>`;
     body += `<path class="c-temp" d="${path(temp, yt)}"/><circle class="c-dot" cx="${x(l.t).toFixed(1)}" cy="${yt(l.v).toFixed(1)}" r="4"/>`;
+    if (marks && temp.length > 2) {
+      const sp = spanne(temp);
+      const lab = (p, above) => {
+        const cx = Math.min(Math.max(x(p.t), L + 16), W - R - 16), cy = yt(p.v);
+        const ty = above ? Math.max(cy - 7, T + 9) : Math.min(cy + 14, T + ih - 3);
+        return `<circle class="c-mark" cx="${x(p.t).toFixed(1)}" cy="${cy.toFixed(1)}" r="2.5"/><text class="c-marklab" x="${cx.toFixed(1)}" y="${ty.toFixed(1)}" text-anchor="middle">${p.v.toFixed(1).replace(".", ",")}°</text>`;
+      };
+      body += lab(sp.hi, true) + lab(sp.lo, false);
+    }
   }
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Verlauf Temperatur und Luftfeuchte">${g}${body}</svg>`;
 }

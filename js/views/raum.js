@@ -3,47 +3,7 @@ import { esc, tempColor, I, relZeit, uhr } from "../ui.js";
 import { fmt } from "../model.js";
 import { chart, spanne } from "../chart.js";
 import { mountPlugs, plugKarte } from "./geraete.js";
-
-const cache = new Map(); // `${id}|${days}` -> {ts, temp, hum, loading, error}
-let days = 1;
-
-async function load(ctx, room) {
-  const key = `${room.id}|${days}`;
-  const c = cache.get(key);
-  if (c && (c.loading || Date.now() - c.ts < 5 * 60e3)) return;
-  cache.set(key, { ...(c || {}), loading: true, ts: Date.now() });
-  const ids = [room.tempEntity, room.humEntity].filter(Boolean);
-  const end = new Date(), start = new Date(end - days * 86400e3);
-  let res = { temp: [], hum: [] };
-  try {
-    if (days === 1) {
-      const h = await ctx.store.history(ids, 24);
-      res = { temp: h[room.tempEntity] || [], hum: h[room.humEntity] || [] };
-    } else {
-      const s = await ctx.store.statistics(ids, start, end, "hour", ["mean", "min", "max"]);
-      const conv = id => (s[id] || []).filter(p => p.mean != null).map(p => ({ t: p.start + 1800e3, v: p.mean, min: p.min, max: p.max }));
-      res = { temp: conv(room.tempEntity), hum: conv(room.humEntity) };
-      if (!res.temp.length && !res.hum.length) { // keine Langzeitstatistik → Rohdaten
-        const h = await ctx.store.history(ids, days * 24);
-        res = { temp: h[room.tempEntity] || [], hum: h[room.humEntity] || [] };
-      }
-    }
-    cache.set(key, { ts: Date.now(), ...res });
-  } catch (e) {
-    cache.set(key, { ts: Date.now(), temp: [], hum: [], error: e.message });
-  }
-  ctx.rerender();
-}
-
-function findRoom(m, id) {
-  if (m.roomById[id]) return m.roomById[id];
-  const o = m.outside;
-  if (o?.areaId === id) return {
-    id, name: o.name, outside: true, temp: o.temp, hum: o.hum, ah: o.ah, tempEntity: o.tempEntity, humEntity: o.humEntity,
-    status: { lvl: "none", text: "" }, batteries: [], openings: [], moisture: [], switches: [], hasSensor: true,
-  };
-  return null;
-}
+import { findRoom, verlauf, ladeVerlauf, zeitraum, bisJetzt } from "../verlauf.js";
 
 function rail(lo, hi, now, d, u) {
   const a = lo - (hi - lo) * 0.25 - 0.5, b = hi + (hi - lo) * 0.25 + 0.5;
@@ -59,7 +19,8 @@ export const raumView = {
     const m = ctx.model, r = findRoom(m, id);
     if (!r) return `<header class="pagehead"><a class="back" href="#haus">${I.back} Haus</a><h1>Raum nicht gefunden</h1></header><p class="dim">Der Bereich wurde in Home Assistant vielleicht umbenannt oder gelöscht.</p>`;
     const floor = m.groups.find(g => g.rooms.includes(r)) || (m.roof?.room === r ? m.roof : null);
-    const c = cache.get(`${r.id}|${days}`);
+    const days = zeitraum.days;
+    const c = verlauf(r, days);
     const now = Date.now();
     const st = r.status, o = m.outside;
     const bat = r.batteries[0];
@@ -84,7 +45,7 @@ export const raumView = {
     ${verdict}
     ${r.tempEntity || r.humEntity ? `
     <h3>Verlauf <span class="tabs" role="group" aria-label="Zeitraum"><button type="button" data-days="1" aria-pressed="${days === 1}">24 h</button><button type="button" data-days="7" aria-pressed="${days === 7}">7 T</button></span></h3>
-    ${c && !c.loading || c?.temp ? chart({ temp: c.temp || [], hum: c.hum || [], start: now - days * 86400e3, end: now, days }) + legend : `<div class="chart-empty">Lädt …</div>`}
+    ${c && !c.loading || c?.temp ? chart({ temp: bisJetzt(c.temp || [], r.temp), hum: bisJetzt(c.hum || [], r.hum), start: now - days * 86400e3, end: now, days }) + legend : `<div class="chart-empty">Lädt …</div>`}
     ${c?.error ? `<p class="dim">Verlauf konnte nicht geladen werden: ${esc(c.error)}</p>` : ""}
     ${tSp || hSp ? `<h3>Spanne <span>${days === 1 ? "24 h" : "7 Tage"}</span></h3>
     <div class="range">
@@ -105,8 +66,8 @@ export const raumView = {
   mount(el, ctx, id) {
     const r = findRoom(ctx.model, id);
     if (!r) return;
-    if (r.tempEntity || r.humEntity) load(ctx, r);
-    el.querySelectorAll("[data-days]").forEach(b => b.addEventListener("click", () => { days = +b.dataset.days; ctx.rerender(); }));
+    if (r.tempEntity || r.humEntity) ladeVerlauf(ctx.store, r, zeitraum.days, ctx.rerender);
+    el.querySelectorAll("[data-days]").forEach(b => b.addEventListener("click", () => { zeitraum.days = +b.dataset.days; ctx.rerender(); }));
     mountPlugs(el, ctx);
   },
 };
