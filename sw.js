@@ -5,8 +5,8 @@ const CACHE = "zuhause-" + self.ZUHAUSE_VERSION;
 
 const FILES = [
   "index.html", "version.js", "manifest.webmanifest", "css/app.css",
-  "js/app.js", "js/ha.js", "js/store.js", "js/model.js", "js/physik.js", "js/chart.js", "js/ui.js", "js/settings.js",
-  "js/views/haus.js", "js/views/raum.js", "js/views/klima.js", "js/views/geraete.js", "js/views/hinweise.js", "js/views/einstellungen.js",
+  "js/app.js", "js/ha.js", "js/store.js", "js/model.js", "js/physik.js", "js/chart.js", "js/verlauf.js", "js/ui.js", "js/settings.js",
+  "js/views/haus.js", "js/views/raum.js", "js/views/klima.js", "js/views/geraete.js", "js/views/hinweise.js", "js/views/einstellungen.js", "js/views/blick.js",
   "fonts/archivo-latin.woff2", "fonts/plexmono-400-latin.woff2", "fonts/plexmono-500-latin.woff2",
   "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png",
 ];

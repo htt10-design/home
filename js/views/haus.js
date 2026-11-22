@@ -8,7 +8,7 @@ import { plugKarte, mountPlugs } from "./geraete.js";
 export function roomCell(r, roof = false) {
   const flag = r.status.vent && !r.neben;
   const cls = ["room", r.hasSensor ? "" : "leer", r.offline ? "offline" : "", flag ? "flag" : ""].join(" ");
-  return `<a class="${cls}" href="#raum/${encodeURIComponent(r.id)}" style="--tc:${tempColor(r.offline ? null : r.temp)}" aria-label="${esc(r.name)} öffnen">
+  return `<a class="${cls}" href="#haus/${encodeURIComponent(r.id)}" style="--tc:${tempColor(r.offline ? null : r.temp)}" aria-label="${esc(r.name)} öffnen">
     <span class="n">${esc(r.name)}</span>
     ${r.hasSensor
       ? `<span class="v">${r.offline ? "offline" : fmt(r.temp) + "°"}</span><span class="h"${roof ? ' style="justify-content:center"' : ""}>${r.hum != null && !r.offline ? I.drop + fmt(r.hum, 0) + "%" : "&nbsp;"}</span>`
@@ -37,11 +37,12 @@ function aussen(m) {
     meta.push(parts.join(" · "));
     if (w.regenAb) meta.push(w.regenAb - Date.now() < 30 * 60e3 ? "Niederschlag jetzt" : `Regen ab ${uhr(w.regenAb).slice(0, 2)} Uhr`);
   } else meta.push(`<span class="dim">kein Wetter in HA</span>`);
-  return `<div class="out">
+  const outTag = o?.areaId ? "a" : "div";
+  return `<${outTag} class="out"${o?.areaId ? ` href="#haus/${encodeURIComponent(o.areaId)}" aria-label="Verlauf draußen anzeigen"` : ""}>
     <div><div class="lbl">${o?.source === "wetter" ? "Außen (Wetterdienst)" : esc(o?.name || "Außen")}</div>
       <div class="t">${o?.temp != null ? fmt(o.temp) : "–"}<sup>°C</sup></div></div>
     <div class="meta">${w ? wetterIcon(w.condition) : ""}${meta.join("<br>")}</div>
-  </div>
+  </${outTag}>
   ${w?.hourly?.length ? `<div class="hours">${w.hourly.slice(1, 7).map(f => `<div><span>${String(new Date(f.datetime).getHours()).padStart(2, "0")}</span>${wetterIcon(f.condition)}<b>${Math.round(f.temperature)}°</b></div>`).join("")}</div>` : ""}`;
 }
 
