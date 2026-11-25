@@ -2,12 +2,15 @@
 import { esc, relZeit } from "../ui.js";
 
 export function hinweisListe(alerts) {
-  return `<div class="alerts">${alerts.map(a => `
-    <a class="alert ${a.lvl}" href="${a.area ? `#raum/${encodeURIComponent(a.area)}` : "#hinweise"}">
-      <span class="k">${esc(a.kind)}</span>
-      <span>${esc(a.title)}${a.sub ? `<br><span class="s">${esc(a.sub)}</span>` : ""}</span>
-      <span class="s">${a.since ? relZeit(a.since) : ""}</span>
-    </a>`).join("")}</div>`;
+  return `<div class="alerts">${alerts.map(a => {
+    const text = `<span class="k">${esc(a.kind)}</span>
+      <span>${esc(a.title)}${a.sub ? `<br><span class="s">${esc(a.sub)}</span>` : ""}</span>`;
+    // Hinweise mit Aktion: Knopf statt Link (Knöpfe dürfen nicht in Links stecken)
+    if (a.quittieren) return `<div class="alert ${a.lvl}">${text}<button type="button" class="btn small" data-quitt="${esc(a.plug)}">Erledigt</button></div>`;
+    if (a.einschalten) return `<div class="alert ${a.lvl}">${text}<button type="button" class="btn small" data-einschalten="${esc(a.plug)}">Einschalten</button></div>`;
+    const href = a.area ? `#raum/${encodeURIComponent(a.area)}` : a.plug ? "#geraete" : "#hinweise";
+    return `<a class="alert ${a.lvl}" href="${href}">${text}<span class="s">${a.since ? relZeit(a.since) : ""}</span></a>`;
+  }).join("")}</div>`;
 }
 
 export const hinweiseView = {

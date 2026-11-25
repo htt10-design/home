@@ -1,5 +1,6 @@
 // Einstellungen: Darstellung, Rollen (Außen, Wetter), Räume, Grenzwerte, Verbindung, App.
 import { esc } from "../ui.js";
+import { ARTEN } from "../waechter.js";
 import { getSettings, setSettings, setToken, DEFAULTS } from "../settings.js";
 
 const GRENZEN = [
@@ -10,6 +11,7 @@ const GRENZEN = [
   ["akkuNiedrig", "Akku-Hinweis unter", "%"],
   ["akkuKritisch", "Akku rot unter", "%"],
   ["offlineStunden", "Sensor offline nach", "h"],
+  ["kuehlStunden", "Kühlschrank-Alarm ohne Kühlung nach", "h"],
 ];
 
 export const einstellungenView = {
@@ -48,6 +50,20 @@ export const einstellungenView = {
         </tbody></table>
       </fieldset>
 
+      <fieldset><legend>Steckdosen</legend>
+        ${m.plugs.length ? `<p class="hint"><b>Nur messen</b> blendet den Schalter in der App aus, z. B. beim Kühlschrank. Die <b>Überwachung</b> meldet beim Kühlschrank, wenn er aus ist oder nicht mehr kühlt, und bei der Waschmaschine, wenn sie fertig ist.</p>
+        <div class="plugset">${m.plugs.map(p => {
+          const cfg = s.geraete?.[p.id] || {};
+          const pid = p.id.replace(/[^a-z0-9_]/gi, "_");
+          return `<div class="plugrow">
+            <div class="pn">${esc(p.name)}${p.room ? `<small>${esc(p.room)}</small>` : ""}${p.powerEntity ? "" : `<small class="bad">keine Leistungsmessung – Überwachung nicht möglich</small>`}</div>
+            <label class="field" for="art-${pid}">Überwachung
+              <select id="art-${pid}" data-art="${esc(p.id)}" ${p.powerEntity ? "" : "disabled"}>${Object.entries(ARTEN).map(([k, l]) => `<option value="${k}" ${(cfg.art || "normal") === k ? "selected" : ""}>${l}</option>`).join("")}</select></label>
+            <label class="check" for="mess-${pid}"><input type="checkbox" id="mess-${pid}" data-mess="${esc(p.id)}" ${cfg.nurMessen ? "checked" : ""}> Nur messen (kein Schalter)</label>
+          </div>`;
+        }).join("")}</div>` : `<p class="hint">Noch keine Steckdose in Home Assistant gefunden.</p>`}
+      </fieldset>
+
       <fieldset><legend>Grenzwerte</legend>
         <div class="grid2">${GRENZEN.map(([k, l, u]) => `<label class="field" for="${k}">${l}
           <span class="unit"><input type="number" inputmode="decimal" step="${k === "lueftenDiff" ? "0.1" : "1"}" id="${k}" name="${k}" value="${s[k]}"><span>${u}</span></span></label>`).join("")}</div>
@@ -71,7 +87,14 @@ export const einstellungenView = {
     const f = el.querySelector("#set");
     const save = () => {
       const fd = new FormData(f);
+      const geraete = {};
+      f.querySelectorAll("[data-art]").forEach(sel => {
+        const id = sel.dataset.art;
+        geraete[id] = { art: sel.value, nurMessen: f.querySelector(`[data-mess="${CSS.escape(id)}"]`)?.checked || false };
+      });
+      f.querySelectorAll("[data-mess]").forEach(cb => { geraete[cb.dataset.mess] ??= { art: "normal", nurMessen: cb.checked }; });
       const patch = {
+        geraete,
         theme: fd.get("theme") || "system",
         aussenBereich: fd.get("aussenBereich") || "",
         wetter: fd.get("wetter") || "",

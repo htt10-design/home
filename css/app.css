@@ -114,7 +114,7 @@ h3 > span { font: 400 11px var(--f-mono); text-transform: none; letter-spacing: 
 
 /* Hinweise */
 .alerts { border: 2px solid var(--line) }
-.alert { display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: center; padding: 10px; font-size: 13.5px; text-decoration: none }
+.alert { display: grid; grid-template-columns: 46px 1fr auto; gap: 10px; align-items: center; padding: 10px; font-size: 13.5px; text-decoration: none }
 .alert + .alert { border-top: 1px solid color-mix(in oklab, var(--line) 30%, transparent) }
 .alert .k { font: 600 10px var(--f-mono); text-align: center; padding: 3px 0; background: var(--muted); color: var(--surface) }
 .alert.warn .k { background: var(--warn) } .alert.crit .k { background: var(--crit) } .alert.info .k { background: var(--accent) }
@@ -132,6 +132,23 @@ h3 > span { font: 400 11px var(--f-mono); text-transform: none; letter-spacing: 
 .tog span { padding: 0 12px; display: grid; place-items: center }
 .tog[aria-checked="true"] .on, .tog[aria-checked="false"] .off { background: var(--ink); color: var(--surface) }
 .tog:disabled { opacity: .5; cursor: default }
+
+/* Steckdosen: Status, Überwachung */
+.plug .pn small + small { margin-left: 6px }
+.plug.alarm { border-color: var(--crit); box-shadow: inset 6px 0 0 var(--crit) }
+.pstat { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; font: 12px/1.4 var(--f-mono); padding: 8px 0 0; border-top: 1px solid color-mix(in oklab, var(--line) 25%, transparent) }
+.pstat small { font-size: 10.5px; color: var(--muted) }
+.pstat.go { color: var(--ok) } .pstat.go .dim { color: var(--muted) }
+.pstat.crit { color: var(--crit); font-weight: 500 }
+.pstat.fertig { color: var(--accent); font-weight: 500 }
+.pstat b { color: var(--ink); font-weight: 500 }
+.lockbadge { font-size: 10px; line-height: 1.25; letter-spacing: .08em; text-align: center; padding: 5px 8px; border: 2px dashed color-mix(in oklab, var(--line) 55%, transparent); color: var(--muted) }
+.alert > .btn.small { white-space: nowrap }
+.plugset { display: grid; gap: 0 }
+.plugrow { display: grid; gap: 10px; padding: 12px 0; border-bottom: 1px solid color-mix(in oklab, var(--line) 25%, transparent) }
+.plugrow .pn { font-weight: 600; font-stretch: 85% }
+.plugrow .pn small { display: block; font: 11px var(--f-mono); color: var(--muted); font-weight: 400 }
+.plugrow .pn small.bad { color: var(--crit) }
 
 /* ---------- Raumdetail ---------- */
 .rtop { margin: calc(-14px - env(safe-area-inset-top, 0px)) -16px 0; padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 16px; background: color-mix(in oklab, var(--tc) var(--mix), var(--surface)); border-bottom: 2px solid var(--line); display: grid; gap: 10px }

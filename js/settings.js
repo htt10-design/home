@@ -17,6 +17,9 @@ export const DEFAULTS = {
   akkuNiedrig: 30,
   akkuKritisch: 15,
   offlineStunden: 6,
+  kuehlStunden: 3,            // Kühlschrank: Alarm, wenn so lange keine Kühlleistung
+  geraete: {},                // {switch.entity_id: {art: "normal"|"kuehl"|"programm", nurMessen: bool}}
+  quittiert: {},              // {switch.entity_id: Zeitpunkt (ms), bis zu dem „fertig“ erledigt ist}
 };
 
 function read(key) {
