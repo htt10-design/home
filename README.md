@@ -147,7 +147,8 @@ js/model.js           Räume, Etagen, Außenwerte, Geräte, Hinweise
 js/physik.js          absolute Feuchte, Taupunkt
 js/chart.js           SVG-Diagramm
 js/verlauf.js         Verläufe laden und zwischenspeichern
-js/views/*.js         Bildschirme (blick.js = Einblendung mit Verlauf)
+js/waechter.js        Steckdosen-Überwachung (Kühlschrank, Waschmaschine), Läufe
+js/views/*.js         Bildschirme (blick.js / blick-geraet.js = Einblendungen mit Verlauf)
 fonts/                Archivo, IBM Plex Mono (SIL Open Font License)
 icons/                App-Icons
 ```

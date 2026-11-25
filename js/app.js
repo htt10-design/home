@@ -19,6 +19,9 @@ const $nav = document.getElementById("nav");
 const $toast = document.getElementById("toast");
 const $sheet = document.getElementById("sheet");
 const $panel = $sheet.querySelector(".sheet-panel");
+const $gear = document.getElementById("gear");
+// Seiten, über denen eine Einblendung („Blick“) öffnen kann: #haus/<id>, #geraete/<id>
+const BLICK_SEITEN = ["haus", "geraete"];
 
 const ROUTES = { haus: hausView, raum: raumView, klima: klimaView, geraete: geraeteView, hinweise: hinweiseView, einstellungen: einstellungenView };
 const NAV = [["haus", "home", "Übersicht"], ["klima", "climate", "Klima"], ["geraete", "plug", "Geräte"], ["hinweise", "bell", "Hinweise"]];
@@ -69,12 +72,14 @@ function render(routeEvent) {
   if (!ctx.model) return;
   const r = route(), view = ROUTES[r.name];
   // Auf der Übersicht ist das Argument die geöffnete Einblendung, nicht eine eigene Seite
-  const key = r.name === "haus" ? "haus" : r.name + "/" + r.arg;
+  const blickSeite = BLICK_SEITEN.includes(r.name);
+  const key = blickSeite ? r.name : r.name + "/" + r.arg;
   const pageChanged = key !== lastRoute;
-  syncSheet(r.name === "haus" ? r.arg : null);
+  syncSheet(blickSeite ? r.arg : null);
+  $gear.hidden = r.name === "einstellungen";
   if (!routeEvent && !pageChanged && !view.live) return;
   lastRoute = key;
-  $view.innerHTML = view.render(ctx, r.name === "haus" ? null : r.arg);
+  $view.innerHTML = view.render(ctx, blickSeite ? null : r.arg);
   view.mount?.($view, ctx, r.arg);
   if (pageChanged) window.scrollTo(0, 0);
   const navKey = r.name === "raum" ? "haus" : r.name;
@@ -92,7 +97,8 @@ let lastHash = location.hash, sheetFromApp = false;
 window.addEventListener("hashchange", () => {
   const prev = lastHash; lastHash = location.hash;
   // Einblendung aus der Übersicht heraus geöffnet → Schließen = Zurück (passt zur Android-Zurück-Taste)
-  if (/^#haus\/./.test(location.hash)) sheetFromApp = sheetFromApp || /^(#haus)?$/.test(prev) || /^#haus\/./.test(prev);
+  const m = location.hash.match(/^#(haus|geraete)\/./);
+  if (m) sheetFromApp = sheetFromApp || prev === "" || prev === "#" + m[1] || prev.startsWith("#" + m[1] + "/");
   else sheetFromApp = false;
   render(true);
 });
@@ -126,7 +132,7 @@ function syncSheet(id) {
 }
 function closeSheet() {
   if (sheetFromApp) history.back();
-  else location.replace("#haus");
+  else location.replace("#" + route().name);
 }
 $sheet.addEventListener("click", e => {
   if (e.target.closest("[data-close]") || e.target.classList.contains("sheet-backdrop")) closeSheet();
@@ -173,6 +179,7 @@ document.addEventListener("click", async e => {
 // ---------- Anmeldung ----------
 function loginScreen(message = "") {
   $nav.hidden = true;
+  $gear.hidden = true;
   $view.innerHTML = `
   <div class="login">
     <div class="loginhouse" aria-hidden="true"><div class="roof"></div><div class="floor"><span></span><span></span><span></span></div><div class="floor"><span></span><span></span></div></div>

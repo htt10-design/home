@@ -83,3 +83,60 @@ export function spanne(pts) {
   for (const p of pts) { if (p.v < lo.v) lo = p; if (p.v > hi.v) hi = p; }
   return { lo, hi };
 }
+
+const wFmt = v => v >= 1000 ? (v / 1000).toFixed(v >= 10000 ? 0 : 1).replace(".", ",") + " kW" : Math.round(v) + " W";
+function schoenesMax(v) {
+  if (v <= 0) return 10;
+  const p = 10 ** Math.floor(Math.log10(v)), n = v / p;
+  return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p;
+}
+
+/**
+ * Leistung als Stufenkurve (Wert gilt bis zum nächsten Punkt), optional mit hinterlegten Läufen.
+ * pts: [{t, v}] in W · laeufe: [{start, ende}] · start/end: Zeitfenster
+ */
+export function leistungChart({ pts = [], laeufe = [], start, end }) {
+  const W = 340, H = 170, L = 40, R = 10, T = 12, B = 22, iw = W - L - R, ih = H - T - B;
+  const sicht = pts.filter((p, i) => i === pts.length - 1 || pts[i + 1].t >= start);
+  if (!sicht.length) return `<div class="chart-empty">Noch keine Leistungsdaten.</div>`;
+  const max = schoenesMax(Math.max(...sicht.map(p => p.v)) * 1.05);
+  const x = t => L + (Math.max(t, start) - start) / (end - start) * iw;
+  const y = v => T + ih - Math.min(v, max) / max * ih;
+  let g = "";
+  for (const l of laeufe) {
+    const a = x(l.start), b = x(l.ende ?? end);
+    if (b > L) g += `<rect class="c-run" x="${a.toFixed(1)}" y="${T}" width="${Math.max(b - a, 1.5).toFixed(1)}" height="${ih}"/>`;
+  }
+  for (const v of [0, max / 2, max]) g += `<line class="c-grid" x1="${L}" x2="${W - R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/><text class="c-lab" x="${L - 6}" y="${(y(v) + 3.5).toFixed(1)}" text-anchor="end">${wFmt(v)}</text>`;
+  const d = new Date(start); d.setMinutes(0, 0, 0); d.setHours(Math.ceil((d.getHours() + 1) / 6) * 6);
+  for (let t = d.getTime(); t < end - 2 * 3600e3; t += 6 * 3600e3) {
+    if (x(t) > W - R - 44) continue;
+    g += `<text class="c-lab" x="${x(t).toFixed(1)}" y="${H - 6}" text-anchor="middle">${String(new Date(t).getHours()).padStart(2, "0")}:00</text>`;
+  }
+  g += `<text class="c-lab" x="${W - R}" y="${H - 6}" text-anchor="end">jetzt</text>`;
+  // Stufenpfad
+  let path = `M${x(sicht[0].t).toFixed(1)} ${y(sicht[0].v).toFixed(1)}`;
+  for (let i = 1; i < sicht.length; i++) path += `H${x(sicht[i].t).toFixed(1)}V${y(sicht[i].v).toFixed(1)}`;
+  path += `H${x(end).toFixed(1)}`;
+  const area = path + `V${T + ih}H${x(sicht[0].t).toFixed(1)}Z`;
+  const last = sicht.at(-1);
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Leistungsverlauf">${g}
+    <path class="c-pow-area" d="${area}"/><path class="c-pow" d="${path}"/>
+    <circle class="c-pow-dot" cx="${x(end).toFixed(1)}" cy="${y(last.v).toFixed(1)}" r="4"/></svg>`;
+}
+
+/** Tagesbalken (z. B. kWh pro Tag). tage: [{t (Tagesbeginn), v, heute?}] */
+export function balkenChart({ tage = [], einheit = "kWh" }) {
+  const W = 340, H = 170, L = 8, R = 8, T = 22, B = 22, iw = W - L - R, ih = H - T - B;
+  if (!tage.length) return `<div class="chart-empty">Noch keine Verbrauchsdaten.</div>`;
+  const max = Math.max(...tage.map(d => d.v), 0.001);
+  const bw = iw / tage.length, gap = Math.min(10, bw * 0.25);
+  let g = `<line class="c-grid" x1="${L}" x2="${W - R}" y1="${T + ih}" y2="${T + ih}"/>`;
+  tage.forEach((d, i) => {
+    const h = d.v / max * ih, xx = L + i * bw + gap / 2, w = bw - gap;
+    g += `<rect class="${d.heute ? "c-bar heute" : "c-bar"}" x="${xx.toFixed(1)}" y="${(T + ih - h).toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(h, 1).toFixed(1)}"/>`;
+    g += `<text class="c-barlab" x="${(xx + w / 2).toFixed(1)}" y="${(T + ih - h - 5).toFixed(1)}" text-anchor="middle">${d.v.toFixed(d.v < 10 ? 2 : 1).replace(".", ",")}</text>`;
+    g += `<text class="c-lab" x="${(xx + w / 2).toFixed(1)}" y="${H - 6}" text-anchor="middle">${d.heute ? "heute" : WD[new Date(d.t).getDay()]}</text>`;
+  });
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Verbrauch pro Tag in ${einheit}">${g}</svg>`;
+}

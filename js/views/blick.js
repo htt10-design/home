@@ -4,10 +4,11 @@ import { esc, tempColor, uhr, wetterIcon } from "../ui.js";
 import { fmt } from "../model.js";
 import { chart, spanne } from "../chart.js";
 import { findRoom, verlauf, ladeVerlauf, zeitraum, bisJetzt } from "../verlauf.js";
+import { geraetBlickHtml, geraetBlickMount, geraetBlickZuruecksetzen } from "./blick-geraet.js";
 
 const VORHERSAGE_H = 12;
 let gezeichnet = ""; // Diagramm nur beim ersten Erscheinen animieren
-export const blickZuruecksetzen = () => { gezeichnet = ""; };
+export const blickZuruecksetzen = () => { gezeichnet = ""; geraetBlickZuruecksetzen(); };
 
 function etage(m, r) {
   if (r.outside) return "DRAUSSEN";
@@ -31,6 +32,7 @@ function zeit(p, days) {
 }
 
 export function blickHtml(ctx, id) {
+  if (id.startsWith("switch.")) return geraetBlickHtml(ctx, id);
   const m = ctx.model, r = findRoom(m, id);
   if (!r) return `<div class="sh-band"><div class="grip"></div><div class="sh-head"><h2 id="sheet-title">Nicht gefunden</h2><button type="button" class="sh-close" data-close aria-label="Schließen">✕</button></div></div>`;
   const days = zeitraum.days, c = verlauf(r, days), now = Date.now();
@@ -88,6 +90,7 @@ export function blickHtml(ctx, id) {
 }
 
 export function blickMount(panel, ctx, id) {
+  if (id.startsWith("switch.")) geraetBlickMount(panel, ctx, id);
   const r = findRoom(ctx.model, id);
   if (r && (r.tempEntity || r.humEntity)) ladeVerlauf(ctx.store, r, zeitraum.days, ctx.rerender);
   panel.querySelectorAll("[data-days]").forEach(b => b.addEventListener("click", () => {

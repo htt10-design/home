@@ -150,6 +150,33 @@ h3 > span { font: 400 11px var(--f-mono); text-transform: none; letter-spacing: 
 .plugrow .pn small { display: block; font: 11px var(--f-mono); color: var(--muted); font-weight: 400 }
 .plugrow .pn small.bad { color: var(--crit) }
 
+/* Zahnrad: auf jeder Seite oben rechts */
+.gearbtn { position: fixed; z-index: 25; top: calc(env(safe-area-inset-top, 0px) + 10px); right: max(12px, calc(env(safe-area-inset-right, 0px) + 12px));
+  width: 42px; height: 42px; display: grid; place-items: center; color: var(--ink);
+  background: color-mix(in oklab, var(--surface) 88%, transparent); border: 2px solid var(--line); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px) }
+.gearbtn svg { width: 22px; height: 22px }
+.gearbtn:active { transform: scale(.94) }
+.bar1 { padding-right: 52px; min-height: 42px }
+.pagehead { padding-right: 52px }
+.rtop .back { margin-right: 52px }
+/* Steckdosen-Karte antippbar */
+.plink { text-decoration: none; color: inherit; display: block; min-width: 0 }
+.plink .more-ico { font: 400 20px var(--f-mono); color: var(--muted); margin-left: 8px; vertical-align: 3px }
+.plink:active { opacity: .7 }
+.sh-plugstat { display: block; padding: 8px 12px; margin: 0 }
+.sh-plugstat .pstat { border-top: 0; padding: 0 }
+.c-run { fill: color-mix(in oklab, var(--warn) 14%, transparent) }
+.c-pow-area { fill: color-mix(in oklab, var(--accent) 16%, transparent) }
+.c-pow { fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-linejoin: round }
+.c-pow-dot { fill: var(--accent); stroke: var(--bg); stroke-width: 2 }
+.c-bar { fill: color-mix(in oklab, var(--accent) 70%, var(--surface)) }
+.c-bar.heute { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 3 2 }
+.c-barlab { font: 500 10px var(--f-mono); fill: var(--ink) }
+.laeufe { list-style: none; margin: -6px 0 0; padding: 0; font-size: 12.5px }
+.laeufe li { display: grid; grid-template-columns: 1fr auto auto; gap: 14px; padding: 8px 0; border-bottom: 1px solid color-mix(in oklab, var(--line) 25%, transparent) }
+.laeufe b { font-weight: 500; min-width: 70px; text-align: right }
+.sh-note { font-size: 12.5px; margin: 0 }
+
 /* ---------- Raumdetail ---------- */
 .rtop { margin: calc(-14px - env(safe-area-inset-top, 0px)) -16px 0; padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 16px; background: color-mix(in oklab, var(--tc) var(--mix), var(--surface)); border-bottom: 2px solid var(--line); display: grid; gap: 10px }
 .rtop .sub { font-size: 11px; opacity: .8; margin-top: 4px }
