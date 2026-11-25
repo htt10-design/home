@@ -11,6 +11,8 @@ import { geraeteView } from "./views/geraete.js";
 import { hinweiseView } from "./views/hinweise.js";
 import { einstellungenView } from "./views/einstellungen.js";
 import { blickHtml, blickMount, blickZuruecksetzen } from "./views/blick.js";
+import { Waechter } from "./waechter.js";
+import { setSettings } from "./settings.js";
 
 const $view = document.getElementById("view");
 const $nav = document.getElementById("nav");
@@ -82,6 +84,7 @@ function render(routeEvent) {
 
 function rebuild() {
   ctx.model = buildModel(ctx.store, ctx.settings);
+  ctx.waechter?.ergaenze(ctx.model);
   if (ctx.model.weather?.id !== ctx.store.forecast.entity) ctx.store.watchForecast(ctx.model.weather?.id || null);
 }
 
@@ -149,6 +152,24 @@ document.addEventListener("keydown", e => { if (e.key === "Escape" && sheetId) c
   });
 })();
 
+// Aktionen aus Hinweisen und Steckdosen-Karten (überall gleich)
+document.addEventListener("click", async e => {
+  const q = e.target.closest("[data-quitt]");
+  if (q) {
+    const s = getSettings();
+    setSettings({ quittiert: { ...s.quittiert, [q.dataset.quitt]: Date.now() } });
+    ctx.refreshModel();
+    toast("Als erledigt markiert.");
+    return;
+  }
+  const an = e.target.closest("[data-einschalten]");
+  if (an && ctx.conn) {
+    an.disabled = true;
+    try { await ctx.conn.callService("switch", "turn_on", an.dataset.einschalten); toast("Eingeschaltet."); }
+    catch (err) { toast(`Einschalten fehlgeschlagen: ${err.message}`); an.disabled = false; }
+  }
+});
+
 // ---------- Anmeldung ----------
 function loginScreen(message = "") {
   $nav.hidden = true;
@@ -200,6 +221,7 @@ async function start(token) {
   }
   ctx.conn = conn;
   ctx.store = new Store(conn);
+  ctx.waechter = new Waechter(ctx.store, () => { if (ctx.store.loaded) { rebuild(); scheduleRender(); } });
   conn.addEventListener("status", () => { if (ctx.model) scheduleRender(); });
   conn.addEventListener("authinvalid", () => { setToken(""); loginScreen("Der Token ist nicht mehr gültig. Bitte neu eingeben."); });
   ctx.store.addEventListener("change", () => { if (ctx.store.loaded) { rebuild(); scheduleRender(); } });
