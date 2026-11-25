@@ -138,3 +138,37 @@ export function dauer(ms) {
   const h = Math.floor(min / 60), m = min % 60;
   return h < 24 ? `${h}:${String(m).padStart(2, "0")} h` : `${Math.round(h / 24 * 10) / 10} Tage`.replace(".", ",");
 }
+
+/**
+ * Einzelne Läufe in einer Leistungsreihe finden (für den Verlauf).
+ * Programmgerät: Start ab 10 W, Ende nach 5 min unter 5 W. Kühlgerät: jede Phase ab 15 W.
+ * Ergebnis: [{start, ende (null = läuft noch), kwh}]
+ */
+export function laeufe(pts, now, art) {
+  const out = [];
+  let lauf = null, ruheSeit = null;
+  const kuehl = art === "kuehl";
+  for (let i = 0; i < pts.length; i++) {
+    const t0 = pts[i].t, t1 = i === pts.length - 1 ? now : pts[i + 1].t, v = pts[i].v;
+    const aktiv = kuehl ? v >= KUEHL_AKTIV_W : v >= PROG_START_W;
+    if (aktiv) {
+      if (!lauf) { lauf = { start: t0, ende: null, wh: 0 }; out.push(lauf); }
+      ruheSeit = null;
+    } else if (lauf) {
+      if (kuehl || v < PROG_RUHE_W) {
+        ruheSeit ??= t0;
+        if (kuehl || t1 - ruheSeit >= PROG_ENDE_MS) { lauf.ende = ruheSeit; lauf = null; ruheSeit = null; }
+      } else ruheSeit = null;
+    }
+    if (lauf) lauf.wh += v * (t1 - t0) / 3600e3;
+  }
+  return out.map(l => ({ start: l.start, ende: l.ende, kwh: l.wh / 1000 }));
+}
+
+/** Kühlgerät: Laufanteil und Anzahl Takte im Zeitraum */
+export function takte(pts, now, von) {
+  const l = laeufe(pts, now, "kuehl").filter(x => (x.ende ?? now) > von);
+  const an = l.reduce((s, x) => s + ((x.ende ?? now) - Math.max(x.start, von)), 0);
+  const dauerSchnitt = l.length ? an / l.length : 0;
+  return { anzahl: l.length, anteil: an / (now - von), dauerSchnitt };
+}

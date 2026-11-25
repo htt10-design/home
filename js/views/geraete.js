@@ -6,7 +6,9 @@ import { fmt } from "../model.js";
 
 const energyCache = new Map(); // entity_id -> {ts, today, month, schnitt, tage}
 
-async function loadEnergy(ctx, id) {
+export const energie = id => energyCache.get(id);
+
+export async function loadEnergy(ctx, id) {
   const c = energyCache.get(id);
   if (c && (c.loading || Date.now() - c.ts < 5 * 60e3)) return;
   energyCache.set(id, { ...(c || {}), loading: true, ts: Date.now() });
@@ -26,6 +28,7 @@ async function loadEnergy(ctx, id) {
     energyCache.set(id, {
       ts: Date.now(), today: sum(d[id]), month: sum(mo[id]),
       schnitt: volle.length ? sum(volle) / volle.length : null, tage: volle.length,
+      proTag: [...volle.map(p => ({ t: p.start, v: p.change })), { t: day.getTime(), v: sum(d[id]), heute: true }],
     });
   } catch {
     energyCache.set(id, { ts: Date.now(), today: null, month: null, schnitt: null, tage: 0 });
@@ -34,7 +37,7 @@ async function loadEnergy(ctx, id) {
 }
 
 /** Statuszeile je nach Geräteart */
-function status(p, e) {
+export function status(p, e) {
   const w = p.wache;
   if (p.unavailable) return `<div class="pstat crit">Steckdose nicht erreichbar</div>`;
   if (p.art === "kuehl") {
@@ -54,7 +57,8 @@ function status(p, e) {
   return "";
 }
 
-export function plugKarte(p, ctx) {
+/** basis: Seite, über der die Einblendung öffnet (haus oder geraete) */
+export function plugKarte(p, ctx, basis = "geraete") {
   const e = p.energyEntity ? energyCache.get(p.energyEntity) : null;
   const monat = new Date().toLocaleDateString("de-DE", { month: "short" }).replace(".", "").toUpperCase();
   const schalter = p.nurMessen
@@ -63,8 +67,8 @@ export function plugKarte(p, ctx) {
       <span class="on">EIN</span><span class="off">AUS</span></button>`;
   const art = p.art && p.art !== "normal" ? `<small>${p.art === "kuehl" ? "Kühlgerät" : "Programmgerät"}</small>` : "";
   return `<div class="plug${p.unavailable ? " offline" : ""}${p.art === "kuehl" && (!p.on || p.unavailable) ? " alarm" : ""}">
-    <div><div class="pn">${esc(p.name)}${p.room ? `<small>${esc(p.room)}</small>` : ""}${art}</div>
-      <div class="w">${p.unavailable ? "offline" : p.power != null ? `${fmt(p.power, p.power < 10 ? 1 : 0)} W` : p.on ? "an" : "aus"}</div></div>
+    <a class="plink" href="#${basis}/${encodeURIComponent(p.id)}" aria-label="Verlauf ${esc(p.name)} anzeigen"><div class="pn">${esc(p.name)}${p.room ? `<small>${esc(p.room)}</small>` : ""}${art}</div>
+      <div class="w">${p.unavailable ? "offline" : p.power != null ? `${fmt(p.power, p.power < 10 ? 1 : 0)} W` : p.on ? "an" : "aus"}<span class="more-ico" aria-hidden="true">›</span></div></a>
     ${schalter}
     ${status(p, e)}
     ${p.energyEntity ? `<div class="meta"><span>HEUTE <b>${e?.today != null ? fmt(e.today, 2) : "…"} ${esc(p.energyUnit)}</b></span><span>${monat} <b>${e?.month != null ? fmt(e.month, 1) : "…"} ${esc(p.energyUnit)}</b></span></div>` : ""}

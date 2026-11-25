@@ -53,8 +53,7 @@ export const hausView = {
     const vent = lueftenListe(m, ctx.settings);
     return `
     <div class="sky">
-      <header class="bar1"><b>Zuhause</b><span class="mono">${datumKopf()} · <span class="conn ${ctx.conn.status}">${ctx.conn.status === "live" ? "● LIVE" : ctx.conn.status === "verbinde" ? "◌ VERBINDE" : "○ OFFLINE"}</span></span>
-        <a class="iconbtn" href="#einstellungen" aria-label="Einstellungen">${I.gear}</a></header>
+      <header class="bar1"><b>Zuhause</b><span class="mono">${datumKopf()} · <span class="conn ${ctx.conn.status}">${ctx.conn.status === "live" ? "● LIVE" : ctx.conn.status === "verbinde" ? "◌ VERBINDE" : "○ OFFLINE"}</span></span></header>
       ${aussen(m)}
       ${haus(m)}
     </div>
@@ -67,7 +66,7 @@ export const hausView = {
         ${vent}
       </div>
       <div>
-        ${m.plugs.length ? `<h3>Geräte <span>${m.plugs.length}</span></h3>${m.plugs.map(p => plugKarte(p, ctx)).join("")}` : ""}
+        ${m.plugs.length ? `<h3>Geräte <span>${m.plugs.length}</span></h3>${m.plugs.map(p => plugKarte(p, ctx, "haus")).join("")}` : ""}
       </div>
     </div>`;
   },
